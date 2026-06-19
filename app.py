@@ -164,24 +164,24 @@ if uploaded_file is not None:
     
             st.write(answer)
 
-    if result.get("chart_file"):
-
-        st.image(
-            result["chart_file"],
-            caption="Generated Visualization"
-        )
-    
-        with open(
-            result["chart_file"],
-            "rb"
-        ) as file:
-    
-            st.download_button(
-                label="Download Chart PNG",
-                data=file,
-                file_name=result["chart_file"],
-                mime="image/png"
-            )
+            if result.get("chart_file"):
+        
+                st.image(
+                    result["chart_file"],
+                    caption="Generated Visualization"
+                )
+            
+                with open(
+                    result["chart_file"],
+                    "rb"
+                ) as file:
+            
+                    st.download_button(
+                        label="Download Chart PNG",
+                        data=file,
+                        file_name=result["chart_file"],
+                        mime="image/png"
+                    )
 
 
         #what is the table all about
