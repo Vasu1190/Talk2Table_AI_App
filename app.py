@@ -1,0 +1,198 @@
+from talk2table import (
+    run_talk2table_query
+)
+
+import streamlit as st
+import pandas as pd
+import sqlite3
+
+
+st.set_page_config(
+    page_title="Talk2Table AI",
+    layout="wide"
+)
+
+st.title("Talk2Table AI")
+st.subheader("Analyze CSV data using natural language instead of SQL")
+
+uploaded_file = st.file_uploader(
+    "Upload your CSV file",
+    type=["csv"]
+)
+
+if uploaded_file is not None:
+
+    df = pd.read_csv(uploaded_file)
+    
+    st.write("### Dataset Preview")
+
+    st.dataframe(
+        df.head(20),
+        width="stretch"
+    )
+
+    st.write("### Dataset Information")
+
+    st.write(f"Rows: {df.shape[0]}")
+    st.write(f"Columns: {df.shape[1]}")
+
+    st.write("### Column Names")
+   
+    st.table(
+        pd.DataFrame(
+            {
+                "Column Names": df.columns
+            }
+            )
+    )
+
+    TABLE_NAME = uploaded_file.name.replace(
+        ".csv",
+        ""
+    ).replace(
+        " ",
+        "_"
+    )
+    
+    conn = sqlite3.connect(
+        ":memory:"
+    )
+    
+    df.to_sql(
+        name=TABLE_NAME,
+        con=conn,
+        if_exists="replace",
+        index=False
+    )
+    
+    st.success(
+        f"SQLite table created successfully: {TABLE_NAME}"
+    )
+    
+    cursor = conn.cursor()
+    
+    cursor.execute(
+        f"PRAGMA table_info({TABLE_NAME})"
+    )
+    
+    schema_info = cursor.fetchall()
+    
+    schema = []
+    
+    for col in schema_info:
+    
+        schema.append(
+            f"{col[1]} ({col[2]})"
+        )
+    
+    schema_text = (
+        "Table Name : "
+        + TABLE_NAME
+        + "\n\n"
+        + "\n".join(schema)
+    )
+    
+    st.write("### Table Schema")
+
+    st.code(
+        schema_text
+    )
+
+
+    st.write("### Ask Questions About Your Data")
+
+    user_question = st.chat_input(
+        "Ask your question here..."
+    )
+    
+    if "messages" not in st.session_state:
+
+        st.session_state.messages = []
+    
+    if "chat_history" not in st.session_state:
+    
+        st.session_state.chat_history = []
+    
+    
+    for message in st.session_state.messages:
+    
+        with st.chat_message(
+            message["role"]
+        ):
+    
+            st.write(
+                message["content"]
+            )
+    
+    
+    if user_question:
+    
+        st.session_state.messages.append({
+    
+            "role": "user",
+    
+            "content": user_question
+    
+        })
+    
+        with st.chat_message("user"):
+    
+            st.write(user_question)
+    
+        with st.spinner("Talk2Table AI is analyzing your data..."):
+    
+            result = run_talk2table_query(
+                user_question,
+                st.session_state.chat_history,
+                df,
+                TABLE_NAME,
+                TABLE_NAME,
+                conn
+            )
+    
+        answer = result["final_answer"]
+    
+        st.session_state.messages.append({
+    
+            "role": "assistant",
+    
+            "content": answer
+    
+        })
+    
+        with st.chat_message("assistant"):
+    
+            st.write(answer)
+
+    if result.get("chart_file"):
+
+        st.image(
+            result["chart_file"],
+            caption="Generated Visualization"
+        )
+    
+        with open(
+            result["chart_file"],
+            "rb"
+        ) as file:
+    
+            st.download_button(
+                label="Download Chart PNG",
+                data=file,
+                file_name=result["chart_file"],
+                mime="image/png"
+            )
+
+
+        #what is the table all about
+            
+        #which manager has the highest revenue
+
+        #what did he sell
+
+        #show revenue by manager as a bar chart
+
+        # show it as a pie chart
+
+
+        # Show the pictorial representation of managers & their ratings and the product they sold

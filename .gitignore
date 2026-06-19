@@ -1,0 +1,17 @@
+.env
+
+__pycache__/
+
+*.db
+
+*.png
+
+.ipynb_checkpoints/
+
+*.ipynb
+
+venv/
+
+.venv/
+
+.DS_Store
