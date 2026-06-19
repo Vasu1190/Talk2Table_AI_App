@@ -11,9 +11,39 @@ st.set_page_config(
     page_title="Talk2Table AI",
     layout="wide"
 )
+if "messages" not in st.session_state:
+
+    st.session_state.messages = []
+
+if "chat_history" not in st.session_state:
+
+    st.session_state.chat_history = []
+    
+# =========================================================
+# SIDEBAR
+# =========================================================
+
+with st.sidebar:
+
+    st.title("Talk2Table AI")
+
+    if st.button("🗑️ New Chat"):
+
+        st.session_state.messages = []
+
+        st.session_state.chat_history = []
+
+        st.rerun()
+
+# =========================================================
+# MAIN PAGE
+# =========================================================
 
 st.title("Talk2Table AI")
-st.subheader("Analyze CSV data using natural language instead of SQL")
+
+st.subheader(
+    "Analyze CSV data using natural language instead of SQL"
+)
 
 uploaded_file = st.file_uploader(
     "Upload your CSV file",
@@ -104,15 +134,7 @@ if uploaded_file is not None:
     user_question = st.chat_input(
         "Ask your question here..."
     )
-    
-    if "messages" not in st.session_state:
-
-        st.session_state.messages = []
-    
-    if "chat_history" not in st.session_state:
-    
-        st.session_state.chat_history = []
-    
+        
     
     for message in st.session_state.messages:
     
@@ -196,3 +218,4 @@ if uploaded_file is not None:
 
 
         # Show the pictorial representation of managers & their ratings and the product they sold
+        #who is mj
