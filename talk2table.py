@@ -2500,11 +2500,51 @@ def run_talk2table_query(
     chat_history.append({
 
         "question": user_question,
-
-        "answer": result["final_answer"]
-
+    
+        "answer": result["final_answer"],
+    
+        "enhanced_question": result.get(
+            "enhanced_question",
+            user_question
+        ),
+    
+        "query_type": result.get(
+            "query_type",
+            ""
+        ),
+    
+        "sql_query": result.get(
+            "sql_query",
+            ""
+        ),
+    
+        "is_visualization": result.get(
+            "is_visualization",
+            False
+        ),
+    
+        "chart_type": result.get(
+            "chart_type",
+            ""
+        ),
+    
+        "x_axis": result.get(
+            "x_axis",
+            ""
+        ),
+    
+        "y_axis": result.get(
+            "y_axis",
+            ""
+        ),
+    
+        "group_by": result.get(
+            "group_by",
+            ""
+        )
+    
     })
-
+    
     return result
 
 # =========================================================

@@ -42,7 +42,7 @@ with st.sidebar:
 st.title("Talk2Table AI")
 
 st.subheader(
-    "Analyze CSV data using natural language instead of SQL"
+    "Analyze preprocessed CSV data using natural language instead of SQL"
 )
 
 uploaded_file = st.file_uploader(
@@ -137,7 +137,7 @@ if uploaded_file is not None:
         
     
     for message in st.session_state.messages:
-    
+
         with st.chat_message(
             message["role"]
         ):
@@ -146,6 +146,14 @@ if uploaded_file is not None:
                 message["content"]
             )
     
+            if message.get(
+                "chart_file"
+            ):
+    
+                st.image(
+                    message["chart_file"],
+                    caption="Generated Visualization"
+                )    
     
     if user_question:
     
@@ -175,13 +183,15 @@ if uploaded_file is not None:
         answer = result["final_answer"]
     
         st.session_state.messages.append({
-    
+
             "role": "assistant",
-    
-            "content": answer
-    
-        })
-    
+        
+            "content": answer,
+        
+            "chart_file": result.get("chart_file", "")
+        
+        })    
+        
         with st.chat_message("assistant"):
     
             st.write(answer)
