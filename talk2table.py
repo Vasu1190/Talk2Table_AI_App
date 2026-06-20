@@ -2678,7 +2678,7 @@ def run_talk2table_query(
     conn
 ):
 
-        question_lower = user_question.lower()
+    question_lower = user_question.lower()
 
     chart_words = {
         "pie": "pie chart",
@@ -2686,7 +2686,7 @@ def run_talk2table_query(
         "line": "line chart",
         "scatter": "scatter chart"
     }
-
+    
     if (
         len(chat_history) > 0
         and (
@@ -2695,11 +2695,11 @@ def run_talk2table_query(
             or "same" in question_lower
         )
     ):
-
+    
         for chart_word, chart_phrase in chart_words.items():
-
+    
             if chart_word in question_lower:
-
+    
                 last_question = chat_history[-1].get(
                     "enhanced_question",
                     chat_history[-1].get(
@@ -2707,34 +2707,34 @@ def run_talk2table_query(
                         ""
                     )
                 )
-
+    
                 last_question_lower = last_question.lower()
-
+    
                 for old_chart in [
                     "bar chart",
                     "pie chart",
                     "line chart",
                     "scatter chart"
                 ]:
-
+    
                     if old_chart in last_question_lower:
-
+    
                         user_question = last_question_lower.replace(
                             old_chart,
                             chart_phrase
                         )
-
+    
                         break
-
+    
                 else:
-
+    
                     user_question = (
                         last_question
                         + " as "
                         + chart_phrase
                     )
-
-                break
+    
+                break    
     
     result = graph.invoke({
 
