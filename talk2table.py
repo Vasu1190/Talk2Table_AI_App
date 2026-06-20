@@ -646,7 +646,94 @@ def router_agent(state: SQLState):
     columns = list(
         df.columns
     )
-    
+
+    enhanced_question = state[
+        "enhanced_question"
+    ]
+
+    question_lower = enhanced_question.lower()
+
+    # =====================================================
+    # DIRECT ROUTING SAFETY RULES
+    # =====================================================
+
+    visualization_words = [
+
+        "bar chart",
+        "pie chart",
+        "line chart",
+        "scatter chart",
+        "chart",
+        "graph",
+        "plot",
+        "visual",
+        "visualization",
+        "pictorial",
+        "diagram",
+        "representation"
+
+    ]
+
+    metadata_words = [
+
+        "table name",
+        "dataset name",
+        "column names",
+        "columns",
+        "schema",
+        "data types",
+        "datatype",
+        "structure",
+        "number of rows",
+        "number of columns",
+        "how many rows",
+        "how many columns",
+        "table all about",
+        "dataset all about",
+        "overview"
+
+    ]
+
+    if any(
+
+        word in question_lower
+
+        for word in visualization_words
+
+    ):
+
+        state[
+            "query_type"
+        ] = "sql"
+
+        console.print(
+            "[green]Route → sql[/green]"
+        )
+
+        return state
+
+    if any(
+
+        word in question_lower
+
+        for word in metadata_words
+
+    ):
+
+        state[
+            "query_type"
+        ] = "metadata"
+
+        console.print(
+            "[green]Route → metadata[/green]"
+        )
+
+        return state
+
+    # =====================================================
+    # LLM ROUTER
+    # =====================================================
+
     prompt = PromptTemplate.from_template(
         """
 You are a query routing agent.
@@ -708,6 +795,9 @@ sql:
 - requires sorting or ordering results
 - requires grouping data
 - requires statistical analysis
+- asks for charts, graphs, plots, visualization,
+  pictorial representation, bar chart, pie chart,
+  line chart, or scatter chart based on table data
 
 out_of_scope:
 
@@ -737,6 +827,24 @@ out_of_scope:
 - hypothetical questions not based on the dataset
 - requests requiring external knowledge beyond the uploaded table
 - questions whose answers cannot be derived from the table structure or table contents
+
+Important routing rules:
+
+1. If the question asks for any chart,
+   graph, plot, visualization, pictorial
+   representation, or diagram from the table,
+   classify it as sql.
+
+2. If the question mentions or indirectly
+   refers to data columns, values, categories,
+   regions, products, managers, ratings, sales,
+   revenue, quantity, price, dates, months, or
+   any table content, classify it as sql.
+
+3. If the question is a rewritten follow-up
+   like "show revenue by manager as a pie chart",
+   classify it as sql.
+
 Return ONLY ONE WORD:
 
 metadata
@@ -761,7 +869,7 @@ out_of_scope
 
         "columns": columns,
 
-        "enhanced_question": state["enhanced_question"]
+        "enhanced_question": enhanced_question
 
     }).strip().lower()
 
@@ -779,9 +887,9 @@ out_of_scope
             "out_of_scope"
         )
 
-    state["query_type"] = (
-        query_type
-    )
+    state[
+        "query_type"
+    ] = query_type
 
     console.print(
         f"[green]Route → {query_type}[/green]"
