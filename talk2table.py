@@ -190,10 +190,11 @@ def conversation_memory_agent(
         "chat_history"
     ]
 
+    question_lower = question.lower()
 
-# =====================================================
-# SMART MEMORY ACTIVATION
-# =====================================================
+    # =====================================================
+    # SMART MEMORY ACTIVATION
+    # =====================================================
 
     strong_reference_words = [
 
@@ -210,7 +211,8 @@ def conversation_memory_agent(
         "these",
         "those",
         "former",
-        "latter"
+        "latter",
+        "same"
 
     ]
 
@@ -226,7 +228,19 @@ def conversation_memory_agent(
 
     ]
 
-    question_lower = question.lower()
+    visualization_followup_words = [
+
+        "pie chart",
+        "bar chart",
+        "line chart",
+        "scatter chart",
+        "chart",
+        "graph",
+        "plot",
+        "visual",
+        "visualization"
+
+    ]
 
     has_strong_reference = any(
 
@@ -244,11 +258,19 @@ def conversation_memory_agent(
 
     )
 
+    has_visualization_followup = any(
+
+        phrase in question_lower
+
+        for phrase in visualization_followup_words
+
+    )
+
     is_short_question = (
 
         len(
             question_lower.split()
-        ) <= 5
+        ) <= 7
 
     )
 
@@ -263,6 +285,18 @@ def conversation_memory_agent(
             len(chat_history) > 0
 
             and has_weak_reference
+
+            and is_short_question
+
+        )
+
+        or
+
+        (
+
+            len(chat_history) > 0
+
+            and has_visualization_followup
 
             and is_short_question
 
@@ -294,9 +328,9 @@ def conversation_memory_agent(
 
         return state
 
-# =====================================================
-# No previous history available
-# =====================================================
+    # =====================================================
+    # NO PREVIOUS HISTORY AVAILABLE
+    # =====================================================
 
     if len(chat_history) == 0:
 
@@ -309,10 +343,10 @@ def conversation_memory_agent(
         )
 
         return state
-    
-# =====================================================
-# Use only recent conversations
-# =====================================================
+
+    # =====================================================
+    # USE ONLY RECENT CONVERSATIONS
+    # =====================================================
 
     recent_history = chat_history[-3:]
 
@@ -329,10 +363,34 @@ def conversation_memory_agent(
         history_text += f"""
 
 Question {i}:
-{chat['question']}
+{chat.get("question", "")}
+
+Enhanced Question {i}:
+{chat.get("enhanced_question", chat.get("question", ""))}
 
 Answer {i}:
-{chat['answer']}
+{chat.get("answer", "")}
+
+Query Type {i}:
+{chat.get("query_type", "")}
+
+SQL Query {i}:
+{chat.get("sql_query", "")}
+
+Visualization Required {i}:
+{chat.get("is_visualization", False)}
+
+Chart Type {i}:
+{chat.get("chart_type", "")}
+
+X Axis {i}:
+{chat.get("x_axis", "")}
+
+Y Axis {i}:
+{chat.get("y_axis", "")}
+
+Group By {i}:
+{chat.get("group_by", "")}
 
 """
 
@@ -354,10 +412,9 @@ Current Question:
 
 Rules:
 
-1. Only use conversation history when
-   the current question contains an
-   explicit reference to a previous
-   answer.
+1. Use conversation history only when
+   the current question depends on
+   previous context.
 
 2. Explicit references include:
 
@@ -375,6 +432,7 @@ Rules:
    those
    former
    latter
+   same
 
 3. Short follow-up questions may also
    depend on conversation history,
@@ -390,89 +448,64 @@ Rules:
 
    how many were sold
 
-4. Use conversation history only when
-   required to resolve ambiguity.
+4. Visualization follow-up questions
+   must reuse the previous analytical
+   intent and change only the chart type
+   if the user asks for a different chart.
 
-5. If the current question is already
+5. Examples of visualization follow-ups:
+
+   show it as pie chart
+
+   convert it to pie chart
+
+   make it a bar chart
+
+   show the same as line chart
+
+   change this to scatter chart
+
+6. If the previous question was:
+
+   show revenue by manager as a bar chart
+
+   and the current question is:
+
+   show it as pie chart
+
+   rewrite as:
+
+   show revenue by manager as a pie chart
+
+7. If the previous question was:
+
+   show sales by region as a bar chart
+
+   and the current question is:
+
+   convert it to pie chart
+
+   rewrite as:
+
+   show sales by region as a pie chart
+
+8. If the current question is already
    complete and self-contained,
    return it unchanged.
 
-6. Do NOT infer new intentions.
+9. Do NOT answer the question.
 
-7. Do NOT introduce new topics.
+10. Do NOT introduce new topics.
 
-8. Do NOT combine multiple previous
-   conversations.
+11. Do NOT combine unrelated previous
+    conversations.
 
-9. Preserve the user's original intent.
+12. Preserve the user's original intent.
 
-10. Do NOT answer the question.
+13. Only rewrite the question.
 
-11. Only rewrite the question.
-
-12. If no rewrite is required,
+14. If no rewrite is required,
     return the original question.
-
-Examples:
-
-History:
-
-Q: Which item has the highest value?
-
-A: Item A has the highest value.
-
-Question:
-
-What category does it belong to?
-
-Rewrite:
-
-What category does Item A belong to?
-
-
-History:
-
-Q: Which record ranks first?
-
-A: Record X ranks first.
-
-Question:
-
-What are its details?
-
-Rewrite:
-
-What are the details of Record X?
-
-
-History:
-
-Q: Show analysis by category.
-
-A: Analysis displayed by category.
-
-Question:
-
-Show it as a chart.
-
-Rewrite:
-
-Show analysis by category as a chart.
-
-
-History:
-
-Q: Compare the top performer.
-
-A: Entity Y is the top performer.
-
-Question:
-
-What about the second one?
-
-Rewrite:
-
-Compare Entity Y with the second-ranked entity.
 
 Return ONLY the rewritten question.
 """
@@ -515,7 +548,6 @@ Return ONLY the rewritten question.
     )
 
     return state
-
 
 # =========================================================
 # ROUTER AGENT
