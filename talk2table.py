@@ -345,6 +345,82 @@ def conversation_memory_agent(
         return state
 
     # =====================================================
+    # DIRECT VISUALIZATION FOLLOW-UP FIX
+    # =====================================================
+    
+    chart_followup_map = {
+        "pie": "pie chart",
+        "bar": "bar chart",
+        "line": "line chart",
+        "scatter": "scatter chart"
+    }
+    
+    if (
+        "it" in question_lower
+        or "this" in question_lower
+        or "same" in question_lower
+    ):
+    
+        for chart_word, chart_phrase in chart_followup_map.items():
+    
+            if chart_word in question_lower:
+    
+                last_chat = chat_history[-1]
+    
+                previous_question = last_chat.get(
+                    "enhanced_question",
+                    last_chat.get(
+                        "question",
+                        ""
+                    )
+                )
+    
+                previous_question_lower = previous_question.lower()
+    
+                for old_chart in [
+                    "bar chart",
+                    "pie chart",
+                    "line chart",
+                    "scatter chart"
+                ]:
+    
+                    if old_chart in previous_question_lower:
+    
+                        enhanced_question = previous_question_lower.replace(
+                            old_chart,
+                            chart_phrase
+                        )
+    
+                        state["enhanced_question"] = enhanced_question
+    
+                        console.print(
+                            Panel(
+                                enhanced_question,
+                                title="Enhanced Question"
+                            )
+                        )
+    
+                        return state
+    
+                enhanced_question = (
+                    previous_question
+                    + " as "
+                    + chart_phrase
+                )
+    
+                state["enhanced_question"] = enhanced_question
+    
+                console.print(
+                    Panel(
+                        enhanced_question,
+                        title="Enhanced Question"
+                    )
+                )
+    
+                return state
+    
+
+    # =====================================================
     # USE ONLY RECENT CONVERSATIONS
     # =====================================================
 
@@ -530,11 +606,17 @@ Return ONLY the rewritten question.
     if not enhanced_question:
 
         enhanced_question = question
-
+    
+    console.print(
+    
+        f"[bold cyan]Enhanced Question = {enhanced_question}[/bold cyan]"
+    
+    )
+    
     state[
         "enhanced_question"
     ] = enhanced_question
-
+    
     console.print(
 
         Panel(

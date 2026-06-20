@@ -139,7 +139,7 @@ if uploaded_file is not None:
         "Ask your question here..."
     )
 
-    for message in st.session_state.messages:
+    for i, message in enumerate(st.session_state.messages):
 
         with st.chat_message(
             message["role"]
@@ -175,9 +175,9 @@ if uploaded_file is not None:
                             file_name=os.path.basename(
                                 chart_file
                             ),
-                            mime="image/png"
+                            mime="image/png",
+                            key=f"download_{i}"
                         )
-
     if user_question:
 
         st.session_state.messages.append({
@@ -250,9 +250,9 @@ if uploaded_file is not None:
                             file_name=os.path.basename(
                                 chart_file
                             ),
-                            mime="image/png"
+                            mime="image/png",
+                            key="download_latest"
                         )
-
 else:
 
     st.info(
