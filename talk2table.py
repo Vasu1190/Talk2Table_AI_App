@@ -2095,6 +2095,8 @@ def chart_generator_agent(
     state: SQLState
 ):
 
+    import time
+
     console.print(
         "\n[bold blue]Chart Generator Agent Running[/bold blue]"
     )
@@ -2188,7 +2190,9 @@ def chart_generator_agent(
             plt.bar(
                 result_df[x_col],
                 result_df[y_col],
-                color=colors[:len(result_df)]
+                color=colors[
+                    :len(result_df)
+                ]
             )
 
     # =====================================================
@@ -2295,16 +2299,22 @@ def chart_generator_agent(
 
     plt.tight_layout()
 
+    safe_table_title = (
+        TABLE_TITLE
+        .replace(" ", "_")
+        .replace("/", "_")
+    )
+
     chart_file = (
-        f"{TABLE_TITLE}_chart.png"
+        f"{safe_table_title}_"
+        f"{chart_type}_"
+        f"{int(time.time())}.png"
     )
 
     plt.savefig(
         chart_file,
         bbox_inches="tight"
     )
-
-    plt.show()
 
     plt.close()
 
@@ -2320,7 +2330,6 @@ def chart_generator_agent(
     )
 
     return state
-
 
 # =========================================================
 # RESPONSE AGENT

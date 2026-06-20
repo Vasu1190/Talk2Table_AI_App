@@ -269,6 +269,10 @@ else:
 
         # show it as a pie chart
 
+    #show it as a line chart
+    #show it as a scatter chart
+
+
 
         # Show the pictorial representation of managers & their ratings and the product they sold
         #who is mj
