@@ -2455,96 +2455,102 @@ def run_talk2table_query(
     table_title,
     conn
 ):
+
     result = graph.invoke({
 
         "question": user_question,
-    
+
         "enhanced_question": "",
-    
+
         "chat_history": chat_history,
-    
+
         "df": df,
-    
+
         "table_name": table_name,
-    
+
         "table_title": table_title,
-    
+
         "conn": conn,
-    
+
         "query_type": "",
-    
+
         "schema": "",
-    
+
         "column_context": "",
-    
+
         "sql_query": "",
-    
+
         "is_visualization": False,
-    
+
         "chart_type": "",
-    
+
         "x_axis": "",
-    
+
         "y_axis": "",
-    
+
         "group_by": "",
-    
+
         "chart_file": "",
-    
+
         "result_df": pd.DataFrame(),
-    
+
         "final_answer": ""
-    
+
     })
-    
+
     chat_history.append({
 
         "question": user_question,
-    
+
         "answer": result["final_answer"],
-    
+
         "enhanced_question": result.get(
             "enhanced_question",
             user_question
         ),
-    
+
         "query_type": result.get(
             "query_type",
             ""
         ),
-    
+
         "sql_query": result.get(
             "sql_query",
             ""
         ),
-    
+
         "is_visualization": result.get(
             "is_visualization",
             False
         ),
-    
+
         "chart_type": result.get(
             "chart_type",
             ""
         ),
-    
+
         "x_axis": result.get(
             "x_axis",
             ""
         ),
-    
+
         "y_axis": result.get(
             "y_axis",
             ""
         ),
-    
+
         "group_by": result.get(
             "group_by",
             ""
+        ),
+
+        "chart_file": result.get(
+            "chart_file",
+            ""
         )
-    
+
     })
-    
+
     return result
 
 # =========================================================

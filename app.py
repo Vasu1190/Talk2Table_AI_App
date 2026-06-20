@@ -5,12 +5,14 @@ from talk2table import (
 import streamlit as st
 import pandas as pd
 import sqlite3
+import os
 
 
 st.set_page_config(
     page_title="Talk2Table AI",
     layout="wide"
 )
+
 if "messages" not in st.session_state:
 
     st.session_state.messages = []
@@ -18,7 +20,8 @@ if "messages" not in st.session_state:
 if "chat_history" not in st.session_state:
 
     st.session_state.chat_history = []
-    
+
+
 # =========================================================
 # SIDEBAR
 # =========================================================
@@ -34,6 +37,7 @@ with st.sidebar:
         st.session_state.chat_history = []
 
         st.rerun()
+
 
 # =========================================================
 # MAIN PAGE
@@ -53,7 +57,7 @@ uploaded_file = st.file_uploader(
 if uploaded_file is not None:
 
     df = pd.read_csv(uploaded_file)
-    
+
     st.write("### Dataset Preview")
 
     st.dataframe(
@@ -64,16 +68,17 @@ if uploaded_file is not None:
     st.write("### Dataset Information")
 
     st.write(f"Rows: {df.shape[0]}")
+
     st.write(f"Columns: {df.shape[1]}")
 
     st.write("### Column Names")
-   
+
     st.table(
         pd.DataFrame(
             {
                 "Column Names": df.columns
             }
-            )
+        )
     )
 
     TABLE_NAME = uploaded_file.name.replace(
@@ -83,94 +88,114 @@ if uploaded_file is not None:
         " ",
         "_"
     )
-    
+
     conn = sqlite3.connect(
         ":memory:"
     )
-    
+
     df.to_sql(
         name=TABLE_NAME,
         con=conn,
         if_exists="replace",
         index=False
     )
-    
+
     st.success(
         f"SQLite table created successfully: {TABLE_NAME}"
     )
-    
+
     cursor = conn.cursor()
-    
+
     cursor.execute(
         f"PRAGMA table_info({TABLE_NAME})"
     )
-    
+
     schema_info = cursor.fetchall()
-    
+
     schema = []
-    
+
     for col in schema_info:
-    
+
         schema.append(
             f"{col[1]} ({col[2]})"
         )
-    
+
     schema_text = (
         "Table Name : "
         + TABLE_NAME
         + "\n\n"
         + "\n".join(schema)
     )
-    
+
     st.write("### Table Schema")
 
     st.code(
         schema_text
     )
 
-
     st.write("### Ask Questions About Your Data")
 
     user_question = st.chat_input(
         "Ask your question here..."
     )
-        
-    
+
     for message in st.session_state.messages:
 
         with st.chat_message(
             message["role"]
         ):
-    
+
             st.write(
                 message["content"]
             )
-    
+
             if message.get(
                 "chart_file"
             ):
-    
-                st.image(
-                    message["chart_file"],
-                    caption="Generated Visualization"
-                )    
-    
+
+                chart_file = message["chart_file"]
+
+                if os.path.exists(
+                    chart_file
+                ):
+
+                    st.image(
+                        chart_file,
+                        caption="Generated Visualization"
+                    )
+
+                    with open(
+                        chart_file,
+                        "rb"
+                    ) as file:
+
+                        st.download_button(
+                            label="Download Chart PNG",
+                            data=file,
+                            file_name=os.path.basename(
+                                chart_file
+                            ),
+                            mime="image/png"
+                        )
+
     if user_question:
-    
+
         st.session_state.messages.append({
-    
+
             "role": "user",
-    
+
             "content": user_question
-    
+
         })
-    
+
         with st.chat_message("user"):
-    
-            st.write(user_question)
-    
+
+            st.write(
+                user_question
+            )
+
         with st.spinner("Talk2Table AI is analyzing your data..."):
-    
+
             result = run_talk2table_query(
                 user_question,
                 st.session_state.chat_history,
@@ -179,42 +204,60 @@ if uploaded_file is not None:
                 TABLE_NAME,
                 conn
             )
-    
+
         answer = result["final_answer"]
-    
+
+        chart_file = result.get(
+            "chart_file",
+            ""
+        )
+
         st.session_state.messages.append({
 
             "role": "assistant",
-        
-            "content": answer,
-        
-            "chart_file": result.get("chart_file", "")
-        
-        })    
-        
-        with st.chat_message("assistant"):
-    
-            st.write(answer)
 
-            if result.get("chart_file"):
-        
-                st.image(
-                    result["chart_file"],
-                    caption="Generated Visualization"
-                )
-            
-                with open(
-                    result["chart_file"],
-                    "rb"
-                ) as file:
-            
-                    st.download_button(
-                        label="Download Chart PNG",
-                        data=file,
-                        file_name=result["chart_file"],
-                        mime="image/png"
+            "content": answer,
+
+            "chart_file": chart_file
+
+        })
+
+        with st.chat_message("assistant"):
+
+            st.write(
+                answer
+            )
+
+            if chart_file:
+
+                if os.path.exists(
+                    chart_file
+                ):
+
+                    st.image(
+                        chart_file,
+                        caption="Generated Visualization"
                     )
 
+                    with open(
+                        chart_file,
+                        "rb"
+                    ) as file:
+
+                        st.download_button(
+                            label="Download Chart PNG",
+                            data=file,
+                            file_name=os.path.basename(
+                                chart_file
+                            ),
+                            mime="image/png"
+                        )
+
+else:
+
+    st.info(
+        "Please upload a CSV file to begin."
+    )
 
         #what is the table all about
             
@@ -229,3 +272,7 @@ if uploaded_file is not None:
 
         # Show the pictorial representation of managers & their ratings and the product they sold
         #who is mj
+
+    # git add app.py talk2table.py
+# git commit -m "Preserve chart messages and visualization context"
+ # git push
