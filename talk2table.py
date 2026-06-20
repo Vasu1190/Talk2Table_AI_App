@@ -1719,6 +1719,8 @@ def visualization_agent(
         "enhanced_question"
     ]
 
+    question_lower = question.lower()
+
     result_df = state[
         "result_df"
     ]
@@ -2033,42 +2035,100 @@ group_by=None
 
         group_by = ""
 
-    if chart_type not in [
+    # =====================================================
+# FORCE CHART TYPE FROM USER QUESTION
+# =====================================================
 
-        "bar",
-        "line",
-        "pie",
-        "scatter"
+if "pie" in question_lower:
 
-    ]:
+    chart_type = "pie"
 
-        chart_type = "bar"
+elif "line" in question_lower:
 
-    state[
-        "is_visualization"
-    ] = visualization
+    chart_type = "line"
 
-    state[
-        "chart_type"
-    ] = chart_type
+elif "scatter" in question_lower:
 
-    state[
-        "x_axis"
-    ] = x_axis
+    chart_type = "scatter"
 
-    state[
-        "y_axis"
-    ] = y_axis
+elif "bar" in question_lower:
 
-    state[
-        "group_by"
-    ] = group_by
+    chart_type = "bar"
 
-    console.print(
+# =====================================================
+# FORCE GROUP BY FOR PRODUCT QUESTIONS
+# =====================================================
 
-        Panel(
+if (
 
-            f"""
+    "product" in question_lower
+
+    and
+
+    len(result_df.columns) >= 3
+
+):
+
+    categorical_cols = [
+
+        col
+
+        for col in result_df.columns
+
+        if result_df[col].dtype == "object"
+
+    ]
+
+    if len(categorical_cols) >= 2:
+
+        for col in categorical_cols:
+
+            if col != x_axis:
+
+                group_by = col
+
+                break
+
+# =====================================================
+# SAFETY CHECKS
+# =====================================================
+
+if chart_type not in [
+
+    "bar",
+    "line",
+    "pie",
+    "scatter"
+
+]:
+
+    chart_type = "bar"
+
+state[
+    "is_visualization"
+] = visualization
+
+state[
+    "chart_type"
+] = chart_type
+
+state[
+    "x_axis"
+] = x_axis
+
+state[
+    "y_axis"
+] = y_axis
+
+state[
+    "group_by"
+] = group_by
+
+console.print(
+
+    Panel(
+
+        f"""
 Chart Type : {chart_type}
 
 X Axis : {x_axis}
@@ -2078,14 +2138,13 @@ Y Axis : {y_axis}
 Group By : {group_by if group_by else 'None'}
 """,
 
-            title="Visualization Plan"
-
-        )
+        title="Visualization Plan"
 
     )
 
-    return state
+)
 
+return state
 
 # =========================================================
 # CHART GENERATOR AGENT
